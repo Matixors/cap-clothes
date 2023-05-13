@@ -2,8 +2,8 @@ import { initializeApp } from 'firebase/app';
 import {
   getAuth,
   signInWithPopup,
-  signInWithRedirect,
   GoogleAuthProvider,
+  createUserWithEmailAndPassword,
 } from 'firebase/auth';
 
 import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
@@ -23,24 +23,32 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
+// eslint-disable-next-line no-unused-vars
 const firebaseApp = initializeApp(firebaseConfig);
 
-const provider = new GoogleAuthProvider();
-provider.setCustomParameters({
+const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
   prompt: 'select_account',
 });
 
+// get the user object
 export const auth = getAuth();
-export const signInWithGooglePopup = function () {
-  return signInWithPopup(auth, provider);
+export const signInWithGooglePopup = () => {
+  return signInWithPopup(auth, googleProvider);
 };
 
+// export const signInWithGoogleRedirect = () => {
+//   return signInWithRedirect(auth, googleProvider);
+// };
+
+// connect to db and execute CRUD on it
 export const db = getFirestore();
-export const creatUserDocumentFromAuth = async function (userAuth) {
+export const createUserDocumentFromAuth = async function (userAuth) {
   const userDocumentRef = doc(db, 'users', userAuth.uid);
 
   const userSnapshot = await getDoc(userDocumentRef);
 
+  //check if user document exists
   if (!userSnapshot.exists()) {
     const { displayName, email } = userAuth;
     const createdAt = new Date();
@@ -57,3 +65,8 @@ export const creatUserDocumentFromAuth = async function (userAuth) {
   }
   return userDocumentRef;
 };
+
+export async function createAuthUserWithEmailAndPassword(email, password) {
+  if (!email || !password) return;
+  return await createUserWithEmailAndPassword(auth, email, password);
+}
